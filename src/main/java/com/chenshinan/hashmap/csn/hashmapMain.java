@@ -1,5 +1,6 @@
 package com.chenshinan.hashmap.csn;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -40,6 +41,9 @@ public class hashmapMain {
         //测试HashMap添加null
         myMap.put(null,"ax");
         System.out.println("myMap:"+myMap.get(null));
+
+        //测试包装同步
+        Map concurrentMyMap = Collections.synchronizedMap(myMap);
     }
     private static String toFullBinaryString(int x) {
         int[] buffer = new int[Integer.SIZE];

@@ -1057,4 +1057,12 @@ public class CsnHashMap<K, V> extends AbstractMap<K, V>
         return (x == null || x.getClass() != kc ? 0 :
                 ((Comparable)k).compareTo(x));
     }
+
+    void reinitialize() {
+        table = null;
+        entrySet = null;
+        modCount = 0;
+        threshold = 0;
+        size = 0;
+    }
 }
