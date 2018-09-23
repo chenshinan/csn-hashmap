@@ -1,6 +1,6 @@
 # Map相关实现类的源码解析
 
-> 9.23-
+> 2018.9.6-9.8、2018.9.23-
 
 ## Map的架构图
 
@@ -26,7 +26,9 @@
 
 * HashMap构成
 
-HashMap由数组+链表组成的，数组是HashMap的主体，链表则是主要为了解决哈希冲突而存在的，如果定位到的数组位置不含链表（当前entry的next指向null）,那么对于查找，添加等操作很快，仅需一次寻址即可；如果定位到的数组包含链表，对于添加操作，其时间复杂度为O(n)，首先遍历链表，存在即覆盖，否则新增；对于查找操作来讲，仍需遍历链表，然后通过key对象的equals方法逐一比对查找。所以，性能考虑，HashMap中的链表出现越少，性能才会越好。当链表达到一定长度时转为红黑树，复杂度降为 O(logn)。`新增对象时，size都会+1，对象会根据hash值找到在数组中对应的存储位置，当达到设置的容量阈值时就会触发扩容`
+HashMap由`数组+链表`组成的，数组是HashMap的主体，链表则是主要为了解决哈希冲突而存在的，如果定位到的数组位置不含链表（当前entry的next指向null）,那么对于查找，添加等操作很快，仅需一次寻址即可；如果定位到的数组包含链表，对于添加操作，其时间复杂度为O(n)，首先遍历链表，存在即覆盖，否则新增；对于查找操作来讲，仍需遍历链表，然后通过key对象的equals方法逐一比对查找。所以，性能考虑，HashMap中的链表出现越少，性能才会越好。当链表达到一定长度时转为红黑树，复杂度降为 O(logn)。`新增对象时，size都会+1，对象会根据hash值找到在数组中对应的存储位置，当达到设置的容量阈值时就会触发扩容`
+
+* HashMap 的实现不是同步的，这意味着它`不是线程安全的`。它的`key、value都可以为null`。此外，HashMap中的`映射不是有序`的
 
 * 哈希表
 
@@ -104,3 +106,65 @@ static final int hash(Object key) {
 参考：
 https://www.cnblogs.com/chengxiao/p/6059914.html
 
+## Hashtable
+
+* 继承关系：Hashtable -> Dictionary 实现 Map接口
+
+* 实现方式与HashMap相同，由`数组+链表`构成
+
+* Hashtable 的函数都是同步的，这意味着它是`线程安全`的。它的`key、value都不可以为null`。此外，Hashtable中的`映射不是有序`的
+
+* Dictionary接口
+
+Dictionary是一个抽象类，它直接继承于Object类，没有实现任何接口。Dictionary类是JDK 1.0的引入的。虽然Dictionary也支持“添加key-value键值对”、“获取value”、“获取大小”等基本操作，但它的API函数比Map少；而且`Dictionary一般是通过Enumeration(枚举类)去遍历，Map则是通过Iterator(迭代器)去遍历`
+
+* Enumeration枚举器接口
+
+Enumeration是java.util中的一个接口类，在Enumeration中封装了有关枚举数据集合的方法，与Iterator差不多，用来遍历集合中的元素。但是枚举Enumeration只提供了遍历Vector和Hashtable类型集合元素的功能
+
+## TreeMap
+
+* 继承关系：TreeMap -> AbstractMap 实现 NavigableMap接口
+
+* TreeMap 基于`红黑树（Red-Black tree）`实现的，`不是线程安全`的。TreeMap的`键映射是有序的`
+
+## WeekHashMap
+
+* 继承关系：WeekHashMap -> AbstractMap 实现 Map接口
+
+* 实现方式与HashMap相同，由`数组+链表`构成
+
+* WeakHashMap的键是`弱键`：在 WeakHashMap 中，当某个键不再正常使用时，会被从WeakHashMap中被自动移除。更精确地说，对于一个给定的键，其映射的存在并不阻止垃圾回收器对该键的丢弃，这就使该键成为可终止的，被终止，然后被回收。某个键被终止时，它对应的键值对也就从映射中有效地移除了
+
+* “弱键”的原理
+
+大致上就是，通过WeakReference和ReferenceQueue实现的。 WeakHashMap的key是“弱键”，即是WeakReference类型的；ReferenceQueue是一个队列，它会保存被GC回收的“弱键”。实现步骤如下：
+
+        1、新建WeakHashMap，将“键值对”添加到WeakHashMap中。实际上，WeakHashMap是通过数组table保存Entry(键值对)；每一个Entry实际上是一个单向链表，即Entry是键值对链表。
+        2、当某“弱键”不再被其它对象引用，并被GC回收时。在GC回收该“弱键”时，这个“弱键”也同时会被添加到ReferenceQueue(queue)队列中。
+        3、当下一次我们需要操作WeakHashMap时，会先同步table和queue。table中保存了全部的键值对，而queue中保存被GC回收的键值对；同步它们，就是删除table中被GC回收的键值对。
+
+* WeekHashMap `不是线程安全`的。可以使用 Collections.synchronizedMap 方法来构造同步的 WeakHashMap
+
+## 总结⭐
+
+* HashMap 是基于“拉链法”实现的散列表。一般用于单线程程序中。
+
+* Hashtable 也是基于“拉链法”实现的散列表。它一般用于多线程程序中。
+
+* WeakHashMap 也是基于“拉链法”实现的散列表，它一般也用于单线程程序中。相比HashMap，WeakHashMap中的键是“弱键”，当“弱键”被GC回收时，它对应的键值对也会被从WeakHashMap中删除；而HashMap中的键是强键。
+
+* TreeMap 是有序的散列表，它是通过红黑树实现的。它一般用于单线程中存储有序的映射
+
+* `HashMap`与`Hashtable`的`区别`
+
+        1、HashMap继承于AbstractMap，而Hashtable继承于Dictionary
+        2、HashMap的函数不是线程安全的，而Hashtable的函数是线程安全的
+        3、HashMap的key、value都可以为null，Hashtable的key、value都不可以为null
+        4、HashMap只支持Iterator(迭代器)遍历，而Hashtable支持Iterator(迭代器)和Enumeration(枚举器)两种方式遍历
+        5、HashMap添加元素时，是使用自定义的哈希算法，Hashtable没有自定义哈希算法，而直接采用的key的hashCode()
+
+* `HashMap`与`WeakHashMap`的`区别`
+
+        1、HashMap实现了Cloneable和Serializable接口，而WeakHashMap没有
+        2、HashMap的“键”是“强引用(StrongReference)”，而WeakHashMap的键是“弱引用(WeakReference)”

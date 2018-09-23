@@ -36,6 +36,10 @@ public class hashmapMain {
         for(String str:strings){
             System.out.println((strings.length-1)&hash(str));
         }
+
+        //测试HashMap添加null
+        myMap.put(null,"ax");
+        System.out.println("myMap:"+myMap.get(null));
     }
     private static String toFullBinaryString(int x) {
         int[] buffer = new int[Integer.SIZE];
