@@ -171,6 +171,27 @@ LinkedHashMap重写了父类HashMap的get方法，实际在调用父类getNode()
 
 * `每次访问一个元素（get或put），被访问的元素都被提到最后面去了`
 
+* 利用LinkedHashMap实现LRU算法缓存`（LRU即Least Recently Used，最近最少使用，也就是说，当缓存满了，会优先淘汰那些最近最不常访问的数据）`
+
+get和put方法中会调用：void `afterNodeAccess`(Node<K,V> e) 这个方法，当accessOrder为true时，就是使用的访问顺序，访问次数最少到访问次数最多，此时要做特殊处理。处理机制就是访问了一次，就将自己往后移一位，这里就是先将自己删除了，然后在把自己添加，这样，近期访问的少的就在链表的开始，最近访问的元素就会在链表的末尾。如果为false。那么默认就是插入顺序，直接通过链表的特点就能依次找到插入元素，不用做特殊处理
+
+```java
+public class LRUCache extends LinkedHashMap {
+    public LRUCache(int maxSize) {
+        //设置accessOrder为true
+        super(maxSize, 0.75F, true);
+        maxElements = maxSize;
+    }
+
+    protected boolean removeEldestEntry(java.util.Map.Entry eldest) {
+        return size() > maxElements;
+    }
+
+    private static final long serialVersionUID = 1L;
+    protected int maxElements;
+}
+```
+
 ## 其他知识点
 
 * 可以通过Collections.synchronizedMap方法来构造同步的Map对象
