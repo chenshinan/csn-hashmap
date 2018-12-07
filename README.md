@@ -227,3 +227,6 @@ Map concurrentMyMap = Collections.synchronizedMap(myMap);
 
         1、Enumeration 是JDK 1.0添加的接口，而Iterator 是JDK 1.2才添加的接口
         2、Iterator 比Enumeration 多了支持fail-fast机制，所以Enumeration 遍历速度较快
+
+参考文献：
+- [Java 集合系列教程](http://www.cnblogs.com/skywang12345/p/3323085.html)
